@@ -41,26 +41,8 @@ public class BookManager implements BookRepository {
 		return new ArrayList<>(books.values());
 	}
 
-	public List<Book> searchBooks(String keyword) {
-		return books.values().stream()
-				.filter(book -> book.getTitle().contains(keyword) || book.getAuthor().contains(keyword))
-				.collect(Collectors.toList());
-	}
-
-	public List<Book> getAvailableBooks() {
-		return books.values().stream().filter(Book::isAvailable).collect(Collectors.toList());
-	}
-
 	public int getTotalBookCount() {
 		return books.size();
-	}
-
-	public List<Book> findOverdueBooks() {
-
-		LocalDate today = LocalDate.now();
-
-		return books.values().stream().filter(book -> !book.isAvailable()).filter(book -> book.getDueDate() != null)
-				.filter(book -> book.getDueDate().isBefore(today)).collect(Collectors.toList());
 	}
 
 	@Override

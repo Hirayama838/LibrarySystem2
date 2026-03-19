@@ -1,5 +1,6 @@
 package com.example;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -56,6 +57,22 @@ public class LibraryService {
 
 	public List<Book> searchBooks(String keyword) {
 		return bookRepository.search(keyword);
+	}
+	
+	public List<Book> getAvailableBooks() {
+	    return bookRepository.findAll().stream()
+	            .filter(Book::isAvailable)
+	            .toList();
+	}
+	
+	public List<Book> findOverdueBooks() {
+	    LocalDate today = LocalDate.now();
+
+	    return bookRepository.findAll().stream()
+	            .filter(book -> !book.isAvailable())
+	            .filter(book -> book.getDueDate() != null)
+	            .filter(book -> book.getDueDate().isBefore(today))
+	            .toList();
 	}
 
 }
