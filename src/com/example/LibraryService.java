@@ -1,6 +1,5 @@
 package com.example;
 
-import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -14,53 +13,65 @@ public class LibraryService {
 	// 標準の貸出期間（日数）
 	private static final int DEFAULT_BORROW_DAYS = 14;
 
-	public LibraryService(BookRepository bookRepository, MemberRepository memberRepository) {
+	private final LoanRepository loanRepository;
+
+	public LibraryService(BookRepository bookRepository, MemberRepository memberRepository,
+			LoanRepository loanRepository) {
 		this.bookRepository = bookRepository;
 		this.memberRepository = memberRepository;
+		this.loanRepository = loanRepository;
 	}
 
 	public void borrowBook(String memberId, String isbn) {
-		Book book = bookRepository.findByIsbn(isbn).orElseThrow(() -> new BookNotFoundException(isbn));
 
-		Member member = memberRepository.findById(memberId).orElseThrow(() -> new MemberNotFoundException(memberId));
+		// 存在チェックのみ
+		bookRepository.findByIsbn(isbn).orElseThrow(() -> new BookNotFoundException(isbn));
 
-		book.borrow(member, DEFAULT_BORROW_DAYS);
-		member.borrow(book);
-		
+		memberRepository.findById(memberId).orElseThrow(() -> new MemberNotFoundException(memberId));
+
+		// ★ Loanベースで貸出可否を判断
+		boolean alreadyBorrowed = loanRepository.findAll().stream()
+				.anyMatch(l -> l.getIsbn().equals(isbn) && !l.isReturned());
+
+		if (alreadyBorrowed) {
+			throw new BookNotAvailableException(isbn);
+		}
+
+		// ★ Loanのみで完結
+		Loan loan = new Loan(isbn, memberId, DEFAULT_BORROW_DAYS);
+		loanRepository.save(loan);
 	}
-	
+
 	public void returnBook(String memberId, String isbn) {
-		Member member = memberRepository.findById(memberId)
-				.orElseThrow(() -> new MemberNotFoundException(memberId));
-		
-		Book book = bookRepository.findByIsbn(isbn)
-				.orElseThrow(() -> new BookNotFoundException(isbn));
-		
-		book.returnBy(member);
-		member.returnBook(book);
+
+		Loan loan = loanRepository.findAll().stream().filter(l -> l.getIsbn().equals(isbn))
+				.filter(l -> l.getMemberId().equals(memberId)).filter(l -> !l.isReturned()).findFirst()
+				.orElseThrow(() -> new LibraryException("貸出が見つかりません"));
+
+		loan.returnLoan();
 	}
 
+	public List<Book> getAvailableBooks() {
 
+		List<String> borrowedIsbns = loanRepository.findAll().stream().filter(l -> !l.isReturned()).map(Loan::getIsbn)
+				.toList();
+
+		return bookRepository.findAll().stream().filter(book -> !borrowedIsbns.contains(book.getIsbn())).toList();
+	}
 
 	public List<Book> searchBooks(String keyword) {
 		return bookRepository.search(keyword);
 	}
 
-	public List<Book> getAvailableBooks() {
-		return bookRepository.findAll().stream().filter(Book::isAvailable).toList();
-	}
-
-	public List<Book> findOverdueBooks() {
-		LocalDate today = LocalDate.now();
-
-		return bookRepository.findAll().stream().filter(book -> !book.isAvailable())
-				.filter(book -> book.getDueDate() != null).filter(book -> book.getDueDate().isBefore(today)).toList();
+	public List<Loan> findOverdueLoans() {
+		return loanRepository.findAll().stream().filter(Loan::isOverdue).toList();
 	}
 
 	public void removeBook(String isbn) {
-		Book book = bookRepository.findByIsbn(isbn).orElseThrow(() -> new BookNotFoundException(isbn));
 
-		if (!book.isAvailable()) {
+		boolean borrowed = loanRepository.findAll().stream().anyMatch(l -> l.getIsbn().equals(isbn) && !l.isReturned());
+
+		if (borrowed) {
 			throw new LibraryException("貸出中の本は削除できません: " + isbn);
 		}
 

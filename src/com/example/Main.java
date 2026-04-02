@@ -6,8 +6,11 @@ public class Main {
 		// TODO Auto-generated method stub
 		BookRepository bookRepository = new BookManager();
 		MemberRepository memberRepository = new MemberManager();
+		LoanRepository loanRepository = new LoanManager();
 
-		LibraryService service = new LibraryService(bookRepository, memberRepository);
+		LibraryService service =
+		    new LibraryService(bookRepository, memberRepository, loanRepository);
+
 
 		// データ作成
 		Book book1 = new Book("001", "Java入門", "山田");
@@ -30,12 +33,12 @@ public class Main {
 		}
 
 		// 確認
-		System.out.println(book1.isAvailable()); // false
+		System.out.println(service.getAvailableBooks().contains(book1));
 
 		// 返却
 		service.returnBook("m001", "001");
 
-		System.out.println(book1.isAvailable()); // true
+		System.out.println(service.getAvailableBooks().contains(book1));
 
 		try {
 			service.borrowBook("m001", "001");
