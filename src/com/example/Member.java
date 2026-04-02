@@ -42,25 +42,31 @@ public class Member {
 	public List<String> getBorrowedBooks() {
 		return new ArrayList<>(borrowedBooks);
 	}
-
-	public void borrowBook(String isbn) {
+	
+	public void borrow(Book book) {
 		if (borrowedBooks.size() >= MAX_BORROW_LIMIT) {
-			throw new LibraryException("貸出上限（5冊）を超えています");
-		}
-		if (borrowedBooks.contains(isbn)) {
-			throw new LibraryException("既に借りています: " + isbn);
+			throw new LibraryException("貸出上限(5冊)を超えています");
 		}
 		
-		borrowedBooks.add(isbn);
+		if (borrowedBooks.contains(book.getIsbn())) {
+			throw new LibraryException("既に借りています: " + book.getIsbn());
+		}
+		
+		borrowedBooks.add(book.getIsbn());
+	}
+	
+	
+	public void returnBook(Book book) {
+		if (!borrowedBooks.contains(book.getIsbn())) {
+			throw new LibraryException("この本は借りていません: " + book.getIsbn());
+		}
+		
+		borrowedBooks.remove(book.getIsbn());
 	}
 
-	public void returnBook(String isbn) {
-	    if (!borrowedBooks.contains(isbn)) {
-	        throw new LibraryException("この本は借りていません: " + isbn);
-	    }
 
-	    borrowedBooks.remove(isbn);
-	}
+
+
 
 	public int getBorrowedCount() {
 		return borrowedBooks.size();

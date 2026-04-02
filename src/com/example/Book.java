@@ -47,17 +47,22 @@ public class Book {
 	public LocalDate getDueDate() {
 		return dueDate;
 	}
-
-	public void borrowBook(String memberId, int borrowDays) {
-	    if (!isAvailable) {
-	        throw new BookNotAvailableException(isbn);
-	    }
-	    this.isAvailable = false;
-	    this.borrowedBy = memberId;
-	    this.dueDate = LocalDate.now().plusDays(borrowDays);
+	
+	public void borrow(Member member, int borrowDays) {
+		if (!isAvailable) {
+			throw new BookNotAvailableException(isbn);
+		}
+		
+		this.isAvailable = false;
+		this.borrowedBy = member.getMemberId();
+		this.dueDate = LocalDate.now().plusDays(borrowDays);
 	}
-
-	public void returnBook() {
+	
+	public void returnBy(Member member) {
+		if (!member.getMemberId().equals(this.borrowedBy)) {
+			throw new UnauthorizedReturnException(member.getMemberId(), isbn);
+		}
+		
 		this.isAvailable = true;
 		this.borrowedBy = null;
 		this.dueDate = null;

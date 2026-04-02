@@ -20,37 +20,27 @@ public class LibraryService {
 	}
 
 	public void borrowBook(String memberId, String isbn) {
-
-		// 本の存在チェック
 		Book book = bookRepository.findByIsbn(isbn).orElseThrow(() -> new BookNotFoundException(isbn));
 
-		// ユーザーの存在チェック
 		Member member = memberRepository.findById(memberId).orElseThrow(() -> new MemberNotFoundException(memberId));
 
-		if (!book.isAvailable()) {
-			throw new BookNotAvailableException(isbn);
-		}
-
-		// 貸出処理の実行
-		member.borrowBook(isbn);
-		book.borrowBook(memberId, DEFAULT_BORROW_DAYS);
+		book.borrow(member, DEFAULT_BORROW_DAYS);
+		member.borrow(book);
+		
 	}
-
+	
 	public void returnBook(String memberId, String isbn) {
-		// 会員と書籍の存在確認
-		Member member = memberRepository.findById(memberId).orElseThrow(() -> new MemberNotFoundException(memberId));
-
-		Book book = bookRepository.findByIsbn(isbn).orElseThrow(() -> new BookNotFoundException(isbn));
-
-		// 返却権限の確認
-		if (!memberId.equals(book.getBorrowedBy())) {
-			throw new UnauthorizedReturnException(memberId, isbn);
-		}
-
-		// 返却処理の実行
-		book.returnBook();
-		member.returnBook(isbn);
+		Member member = memberRepository.findById(memberId)
+				.orElseThrow(() -> new MemberNotFoundException(memberId));
+		
+		Book book = bookRepository.findByIsbn(isbn)
+				.orElseThrow(() -> new BookNotFoundException(isbn));
+		
+		book.returnBy(member);
+		member.returnBook(book);
 	}
+
+
 
 	public List<Book> searchBooks(String keyword) {
 		return bookRepository.search(keyword);
