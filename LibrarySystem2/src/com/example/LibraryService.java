@@ -24,22 +24,15 @@ public class LibraryService {
 
 	public void borrowBook(String memberId, String isbn) {
 
-		// 存在チェックのみ
-		bookRepository.findByIsbn(isbn).orElseThrow(() -> new BookNotFoundException(isbn));
+	    Book book = bookRepository.findByIsbn(isbn).orElseThrow();
 
-		memberRepository.findById(memberId).orElseThrow(() -> new MemberNotFoundException(memberId));
+	    List<Loan> loans = loanRepository.findAll();
 
-		// ★ Loanベースで貸出可否を判断
-		boolean alreadyBorrowed = loanRepository.findAll().stream()
-				.anyMatch(l -> l.getIsbn().equals(isbn) && !l.isReturned());
+	    // ★ ルールをBookに寄せる
+	    book.assertCanBorrow(loans);
 
-		if (alreadyBorrowed) {
-			throw new BookNotAvailableException(isbn);
-		}
-
-		// ★ Loanのみで完結
-		Loan loan = new Loan(isbn, memberId, DEFAULT_BORROW_DAYS);
-		loanRepository.save(loan);
+	    Loan loan = new Loan(isbn, memberId, 14);
+	    loanRepository.save(loan);
 	}
 
 	public void returnBook(String memberId, String isbn) {

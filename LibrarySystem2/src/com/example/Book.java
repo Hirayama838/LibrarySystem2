@@ -26,5 +26,15 @@ public class Book {
 	public String getAuthor() {
 		return author;
 	}
+	
+	public void assertCanBorrow(List<Loan> loans) {
+
+	    boolean alreadyBorrowed = loans.stream()
+	        .anyMatch(l -> l.getIsbn().equals(this.isbn) && !l.isReturned());
+
+	    if (alreadyBorrowed) {
+	        throw new BookNotAvailableException(isbn);
+	    }
+	}
 
 }
