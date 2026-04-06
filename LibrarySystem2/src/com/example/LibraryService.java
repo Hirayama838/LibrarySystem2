@@ -35,11 +35,11 @@ public class LibraryService {
 
 	public void returnBook(String memberId, String isbn) {
 
-		Loan loan = loanRepository.findAll().stream().filter(l -> l.getIsbn().equals(isbn))
-				.filter(l -> l.getMemberId().equals(memberId)).filter(l -> !l.isReturned()).findFirst()
-				.orElseThrow(() -> new LibraryException("貸出が見つかりません"));
+	    Book book = bookRepository.findByIsbn(isbn).orElseThrow();
 
-		loan.returnLoan();
+	    book.returnBook(memberId);
+
+	    bookRepository.save(book);
 	}
 
 	public List<Book> getAvailableBooks() {
