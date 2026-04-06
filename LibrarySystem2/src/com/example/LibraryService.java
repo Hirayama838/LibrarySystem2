@@ -21,19 +21,17 @@ public class LibraryService {
 		this.memberRepository = memberRepository;
 		this.loanRepository = loanRepository;
 	}
-
+	
 	public void borrowBook(String memberId, String isbn) {
 
 	    Book book = bookRepository.findByIsbn(isbn).orElseThrow();
 
-	    List<Loan> loans = loanRepository.findAll();
+	    book.borrow(memberId, 14);
 
-	    // ★ ルールをBookに寄せる
-	    book.assertCanBorrow(loans);
-
-	    Loan loan = new Loan(isbn, memberId, 14);
-	    loanRepository.save(loan);
+	    bookRepository.save(book);
 	}
+
+
 
 	public void returnBook(String memberId, String isbn) {
 

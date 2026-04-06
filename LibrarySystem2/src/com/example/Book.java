@@ -7,6 +7,8 @@ public class Book {
 	private String title;
 	// 著者名
 	private String author;
+	
+	private List<Loan> loans = new ArrayList<>();
 
 	public Book(String isbn, String title, String author) {
 		this.isbn = isbn;
@@ -35,6 +37,18 @@ public class Book {
 	    if (alreadyBorrowed) {
 	        throw new BookNotAvailableException(isbn);
 	    }
+	}
+	
+	public void borrow(String memberId, int days) {
+
+	    boolean alreadyBorrowed = loans.stream()
+	        .anyMatch(l -> !l.isReturned());
+
+	    if (alreadyBorrowed) {
+	        throw new BookNotAvailableException(isbn);
+	    }
+
+	    loans.add(new Loan(isbn, memberId, days));
 	}
 
 }
