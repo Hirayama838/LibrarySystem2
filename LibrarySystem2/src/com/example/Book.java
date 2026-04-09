@@ -8,7 +8,7 @@ public class Book {
 	// 著者名
 	private String author;
 	
-	private List<Loan> loans = new ArrayList<>();
+	private List<Loan> loans;
 
 	public Book(String isbn, String title, String author) {
 		this.isbn = isbn;
