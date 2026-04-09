@@ -5,7 +5,7 @@ import java.time.LocalDate;
 public class Loan {
 	private final String isbn;
 	private final String memberId;
-	private final LocalDate dueDate;
+	private  LocalDate dueDate;
 	private boolean returned;
 	
 	public Loan(String isbn, String memberId, int days) {
@@ -40,6 +40,19 @@ public class Loan {
 	
 	public boolean isOverdue() {
 		return !returned && dueDate.isBefore(LocalDate.now());
+	}
+	
+	public void extend(int days) {
+	    if (returned) {
+	        throw new LibraryException("返却済みの貸出は延長できません");
+	    }
+	    if (days <= 0) {
+	        throw new IllegalArgumentException("延長日数は正の値である必要があります");
+	    }
+
+	    // dueDate を延長
+	    // ※ dueDate が final だとエラーになるので注意
+	    this.dueDate = this.dueDate.plusDays(days);
 	}
 
 }
