@@ -1,5 +1,8 @@
 package com.example;
 
+import java.util.List;
+import java.util.ArrayList;
+
 public class Book {
 	// 書籍を一意に識別するISBNコード
 	private String isbn;
@@ -7,8 +10,8 @@ public class Book {
 	private String title;
 	// 著者名
 	private String author;
-	
-	private List<Loan> loans;
+
+	private List<Loan> loans = new ArrayList<>();
 
 	public Book(String isbn, String title, String author) {
 		this.isbn = isbn;
@@ -28,46 +31,44 @@ public class Book {
 	public String getAuthor() {
 		return author;
 	}
-	
-	public void assertCanBorrow(List<Loan> loans) {
 
-	    boolean alreadyBorrowed = loans.stream()
-	        .anyMatch(l -> l.getIsbn().equals(this.isbn) && !l.isReturned());
 
-	    if (alreadyBorrowed) {
-	        throw new BookNotAvailableException(isbn);
-	    }
+	private boolean isBorrowed() {
+		return loans.stream().anyMatch(l -> !l.isReturned());
 	}
-	
+
 	public void borrow(String memberId, int days) {
 
-	    if (isBorrowed()) {
-	        throw new BookNotAvailableException(isbn);
-	    }
+		if (isBorrowed()) {
+			throw new BookNotAvailableException(isbn);
+		}
 
-	    loans.add(new Loan(isbn, memberId, days));
+		loans.add(new Loan(isbn, memberId, days));
 	}
-	
+
 	public void returnBook(String memberId) {
 
-	    Loan loan = findActiveLoan(memberId);
-	    loan.returnLoan();
+		Loan loan = findActiveLoan(memberId);
+		loan.returnLoan();
 	}
 
 	public void extend(String memberId, int days) {
 
-	    Loan loan = findActiveLoan(memberId);
-	    loan.extend(days);
+		Loan loan = findActiveLoan(memberId);
+		loan.extend(days);
 	}
 
 	private Loan findActiveLoan(String memberId) {
-	    return loans.stream()
-	        .filter(l -> l.getMemberId().equals(memberId))
-	        .filter(l -> !l.isReturned())
-	        .findFirst()
-	        .orElseThrow(() -> new LibraryException("貸出が見つかりません"));
+		return loans.stream().filter(l -> l.getMemberId().equals(memberId)).filter(l -> !l.isReturned()).findFirst()
+				.orElseThrow(() -> new LibraryException("貸出が見つかりません"));
 	}
-	
 
+	public boolean isAvailable() {
+		return loans.stream().noneMatch(l -> !l.isReturned());
+	}
+
+	public List<Loan> getOverdueLoans() {
+		return loans.stream().filter(Loan::isOverdue).toList();
+	}
 
 }

@@ -13,40 +13,32 @@ public class LibraryService {
 	// 標準の貸出期間（日数）
 	private static final int DEFAULT_BORROW_DAYS = 14;
 
-	private final LoanRepository loanRepository;
-
 	public LibraryService(BookRepository bookRepository, MemberRepository memberRepository,
-			LoanRepository loanRepository) {
+			) {
 		this.bookRepository = bookRepository;
 		this.memberRepository = memberRepository;
-		this.loanRepository = loanRepository;
 	}
-	
+
 	public void borrowBook(String memberId, String isbn) {
 
-	    Book book = bookRepository.findByIsbn(isbn).orElseThrow();
+		Book book = bookRepository.findByIsbn(isbn).orElseThrow();
 
-	    book.borrow(memberId, 14);
+		book.borrow(memberId, 14);
 
-	    bookRepository.save(book);
+		bookRepository.save(book);
 	}
-
 
 	public void returnBook(String memberId, String isbn) {
 
-	    Book book = bookRepository.findByIsbn(isbn).orElseThrow();
+		Book book = bookRepository.findByIsbn(isbn).orElseThrow();
 
-	    book.returnBook(memberId);
+		book.returnBook(memberId);
 
-	    bookRepository.save(book);
+		bookRepository.save(book);
 	}
 
 	public List<Book> getAvailableBooks() {
-
-		List<String> borrowedIsbns = loanRepository.findAll().stream().filter(l -> !l.isReturned()).map(Loan::getIsbn)
-				.toList();
-
-		return bookRepository.findAll().stream().filter(book -> !borrowedIsbns.contains(book.getIsbn())).toList();
+		return bookRepository.findAll().stream().filter(Book::isAvailable).toList();
 	}
 
 	public List<Book> searchBooks(String keyword) {
@@ -54,18 +46,20 @@ public class LibraryService {
 	}
 
 	public List<Loan> findOverdueLoans() {
-		return loanRepository.findAll().stream().filter(Loan::isOverdue).toList();
+		return bookRepository.findAll().stream().flatMap(book -> book.getOverdueLoans().stream()).toList();
 	}
-
+	
 	public void removeBook(String isbn) {
 
-		boolean borrowed = loanRepository.findAll().stream().anyMatch(l -> l.getIsbn().equals(isbn) && !l.isReturned());
+	    Book book = bookRepository.findByIsbn(isbn).orElseThrow();
 
-		if (borrowed) {
-			throw new LibraryException("貸出中の本は削除できません: " + isbn);
-		}
+	    if (!book.isAvailable()) {
+	        throw new LibraryException("貸出中の本は削除できません: " + isbn);
+	    }
 
-		bookRepository.remove(isbn);
+	    bookRepository.remove(isbn);
 	}
+
+
 
 }
