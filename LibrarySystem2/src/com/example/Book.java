@@ -41,10 +41,7 @@ public class Book {
 	
 	public void borrow(String memberId, int days) {
 
-	    boolean alreadyBorrowed = loans.stream()
-	        .anyMatch(l -> !l.isReturned());
-
-	    if (alreadyBorrowed) {
+	    if (isBorrowed()) {
 	        throw new BookNotAvailableException(isbn);
 	    }
 

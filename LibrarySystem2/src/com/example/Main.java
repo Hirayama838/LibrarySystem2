@@ -6,10 +6,9 @@ public class Main {
 		// TODO Auto-generated method stub
 		BookRepository bookRepository = new BookManager();
 		MemberRepository memberRepository = new MemberManager();
-		LoanRepository loanRepository = new LoanManager();
 
 		LibraryService service =
-		    new LibraryService(bookRepository, memberRepository, loanRepository);
+			    new LibraryService(bookRepository, memberRepository);
 
 
 		// データ作成
