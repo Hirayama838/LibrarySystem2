@@ -13,29 +13,35 @@ public class LibraryService {
 	// 標準の貸出期間（日数）
 	private static final int DEFAULT_BORROW_DAYS = 14;
 
-	public LibraryService(BookRepository bookRepository, MemberRepository memberRepository,
-			) {
+	public LibraryService(BookRepository bookRepository, MemberRepository memberRepository) {
 		this.bookRepository = bookRepository;
 		this.memberRepository = memberRepository;
 	}
 
 	public void borrowBook(String memberId, String isbn) {
 
-		Book book = bookRepository.findByIsbn(isbn).orElseThrow();
+	    memberRepository.findById(memberId)
+	        .orElseThrow(() -> new MemberNotFoundException(memberId));
 
-		book.borrow(memberId, 14);
+	    Book book = bookRepository.findByIsbn(isbn)
+	        .orElseThrow(() -> new BookNotFoundException(isbn));
 
-		bookRepository.save(book);
+	    book.borrow(memberId, DEFAULT_BORROW_DAYS);
+
+	    bookRepository.save(book);
 	}
-
+	
 	public void returnBook(String memberId, String isbn) {
 
-		Book book = bookRepository.findByIsbn(isbn).orElseThrow();
+	    Book book = bookRepository.findByIsbn(isbn)
+	        .orElseThrow(() -> new BookNotFoundException(isbn));
 
-		book.returnBook(memberId);
+	    book.returnBook(memberId);
 
-		bookRepository.save(book);
+	    bookRepository.save(book);
 	}
+
+	
 
 	public List<Book> getAvailableBooks() {
 		return bookRepository.findAll().stream().filter(Book::isAvailable).toList();
@@ -48,18 +54,17 @@ public class LibraryService {
 	public List<Loan> findOverdueLoans() {
 		return bookRepository.findAll().stream().flatMap(book -> book.getOverdueLoans().stream()).toList();
 	}
-	
+
 	public void removeBook(String isbn) {
 
-	    Book book = bookRepository.findByIsbn(isbn).orElseThrow();
+		Book book = bookRepository.findByIsbn(isbn)
+			    .orElseThrow(() -> new BookNotFoundException(isbn));
 
-	    if (!book.isAvailable()) {
-	        throw new LibraryException("貸出中の本は削除できません: " + isbn);
-	    }
+		if (!book.isAvailable()) {
+			throw new LibraryException("貸出中の本は削除できません: " + isbn);
+		}
 
-	    bookRepository.remove(isbn);
+		bookRepository.remove(isbn);
 	}
-
-
 
 }

@@ -48,8 +48,8 @@ public class Book {
 
 	public void returnBook(String memberId) {
 
-		Loan loan = findActiveLoan(memberId);
-		loan.returnLoan();
+	    Loan loan = findActiveLoan(memberId);
+	    loan.returnLoan();
 	}
 
 	public void extend(String memberId, int days) {
@@ -60,8 +60,9 @@ public class Book {
 
 	private Loan findActiveLoan(String memberId) {
 		return loans.stream().filter(l -> l.getMemberId().equals(memberId)).filter(l -> !l.isReturned()).findFirst()
-				.orElseThrow(() -> new LibraryException("貸出が見つかりません"));
+				.orElseThrow(() -> new LoanNotFoundException(memberId, isbn));
 	}
+
 
 	public boolean isAvailable() {
 		return loans.stream().noneMatch(l -> !l.isReturned());

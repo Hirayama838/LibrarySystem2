@@ -25,10 +25,7 @@ public class BookManager implements BookRepository {
 
 	@Override
 	public void save(Book book) {
-		if (books.containsKey(book.getIsbn())) {
-			throw new IllegalArgumentException("この本は既に登録されています:" + book.getIsbn());
-		}
-		books.put(book.getIsbn(), book);
+	    books.put(book.getIsbn(), book);
 	}
 
 	@Override
