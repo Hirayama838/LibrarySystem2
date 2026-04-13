@@ -23,31 +23,27 @@ public class Main {
         // 貸出
         service.borrowBook("m001", "001");
 
-        // 貸出2回目(例外)
+        // 貸出2回目（例外）
         try {
             service.borrowBook("m001", "001");
         } catch (BookNotAvailableException e) {
             System.out.println("OK: " + e.getMessage());
         }
 
-        // 確認
-        System.out.println(service.getAvailableBooks().contains(book1));
+        // 利用可能か確認
+        System.out.println(service.getAvailableBooks().contains(book1)); // false
 
         // 返却
         service.returnBook("m001", "001");
 
-        System.out.println(service.getAvailableBooks().contains(book1));
+        System.out.println(service.getAvailableBooks().contains(book1)); // true
 
+        // 再貸出
         try {
             service.borrowBook("m001", "001");
             System.out.println("貸出完了");
-        } catch (BookNotFoundException e) {
-            System.out.println(e.getMessage());
-        } catch (MemberNotFoundException e) {
-            System.out.println(e.getMessage());
-        } catch (BookNotAvailableException e) {
+        } catch (BookNotFoundException | MemberNotFoundException | BookNotAvailableException e) {
             System.out.println(e.getMessage());
         }
-
     }
 }

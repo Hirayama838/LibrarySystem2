@@ -2,16 +2,12 @@ package com.example;
 
 import java.util.List;
 
-/**
- * 図書館の主要な業務ロジックを提供するサービスクラス 書籍の貸出/返却、検索などの機能を統合的に管理する
- */
 public class LibraryService {
-	// 書籍管理用のマネージャー
+
 	private final BookRepository bookRepository;
-	// 会員管理用のマネージャー
 	private final MemberRepository memberRepository;
-	// 標準の貸出期間（日数）
-	private static final int DEFAULT_BORROW_DAYS = 14;
+
+	private static final int DEFAULT_DAYS = 14;
 
 	public LibraryService(BookRepository bookRepository, MemberRepository memberRepository) {
 		this.bookRepository = bookRepository;
@@ -20,51 +16,29 @@ public class LibraryService {
 
 	public void borrowBook(String memberId, String isbn) {
 
-	    memberRepository.findById(memberId)
-	        .orElseThrow(() -> new MemberNotFoundException(memberId));
+		Member member = memberRepository.findById(memberId).orElseThrow(() -> new MemberNotFoundException(memberId));
 
-	    Book book = bookRepository.findByIsbn(isbn)
-	        .orElseThrow(() -> new BookNotFoundException(isbn));
+		Book book = bookRepository.findByIsbn(isbn).orElseThrow(() -> new BookNotFoundException(isbn));
 
-	    book.borrow(memberId, DEFAULT_BORROW_DAYS);
+		member.borrow(book, DEFAULT_DAYS);
 
-	    bookRepository.save(book);
+		memberRepository.save(member);
+		bookRepository.save(book);
 	}
-	
+
 	public void returnBook(String memberId, String isbn) {
 
-	    Book book = bookRepository.findByIsbn(isbn)
-	        .orElseThrow(() -> new BookNotFoundException(isbn));
+		Member member = memberRepository.findById(memberId).orElseThrow(() -> new MemberNotFoundException(memberId));
 
-	    book.returnBook(memberId);
+		Book book = bookRepository.findByIsbn(isbn).orElseThrow(() -> new BookNotFoundException(isbn));
 
-	    bookRepository.save(book);
+		member.returnBook(book);
+
+		memberRepository.save(member);
+		bookRepository.save(book);
 	}
-
-	
 
 	public List<Book> getAvailableBooks() {
 		return bookRepository.findAll().stream().filter(Book::isAvailable).toList();
 	}
-
-	public List<Book> searchBooks(String keyword) {
-		return bookRepository.search(keyword);
-	}
-
-	public List<Loan> findOverdueLoans() {
-		return bookRepository.findAll().stream().flatMap(book -> book.getOverdueLoans().stream()).toList();
-	}
-
-	public void removeBook(String isbn) {
-
-		Book book = bookRepository.findByIsbn(isbn)
-			    .orElseThrow(() -> new BookNotFoundException(isbn));
-
-		if (!book.isAvailable()) {
-			throw new LibraryException("貸出中の本は削除できません: " + isbn);
-		}
-
-		bookRepository.remove(isbn);
-	}
-
 }

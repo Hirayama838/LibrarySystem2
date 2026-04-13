@@ -1,25 +1,19 @@
 package com.example;
 
-import java.util.List;
-import java.util.ArrayList;
-
 public class Book {
-	// 書籍を一意に識別するISBNコード
-	private String isbn;
-	// 書籍のタイトル
-	private String title;
-	// 著者名
-	private String author;
 
-	private List<Loan> loans = new ArrayList<>();
+	private String isbn;
+	private String title;
+	private String author;
+	private boolean borrowed;
 
 	public Book(String isbn, String title, String author) {
 		this.isbn = isbn;
 		this.title = title;
 		this.author = author;
+		this.borrowed = false;
 	}
 
-	// Getterメソッド
 	public String getIsbn() {
 		return isbn;
 	}
@@ -32,44 +26,18 @@ public class Book {
 		return author;
 	}
 
-
-	private boolean isBorrowed() {
-		return loans.stream().anyMatch(l -> !l.isReturned());
+	public boolean isAvailable() {
+		return !borrowed;
 	}
 
-	public void borrow(String memberId, int days) {
-
-		if (isBorrowed()) {
+	public void markBorrowed() {
+		if (borrowed) {
 			throw new BookNotAvailableException(isbn);
 		}
-
-		loans.add(new Loan(isbn, memberId, days));
+		borrowed = true;
 	}
 
-	public void returnBook(String memberId) {
-
-	    Loan loan = findActiveLoan(memberId);
-	    loan.returnLoan();
+	public void markReturned() {
+		borrowed = false;
 	}
-
-	public void extend(String memberId, int days) {
-
-		Loan loan = findActiveLoan(memberId);
-		loan.extend(days);
-	}
-
-	private Loan findActiveLoan(String memberId) {
-		return loans.stream().filter(l -> l.getMemberId().equals(memberId)).filter(l -> !l.isReturned()).findFirst()
-				.orElseThrow(() -> new LoanNotFoundException(memberId, isbn));
-	}
-
-
-	public boolean isAvailable() {
-		return loans.stream().noneMatch(l -> !l.isReturned());
-	}
-
-	public List<Loan> getOverdueLoans() {
-		return loans.stream().filter(Loan::isOverdue).toList();
-	}
-
 }
